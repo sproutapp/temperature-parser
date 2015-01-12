@@ -1,10 +1,13 @@
 %{"amqp": {:hex, :amqp, "0.0.6"},
   "amqp_client": {:hex, :amqp_client, "3.4.0"},
+  "conform": {:hex, :conform, "0.11.0"},
   "exjsx": {:hex, :exjsx, "3.1.0"},
   "exrabbit": {:hex, :exrabbit, "0.0.2"},
+  "exrm": {:hex, :exrm, "0.14.16"},
   "jazz": {:hex, :jazz, "0.1.2"},
   "json": {:hex, :json, "0.3.2"},
   "jsx": {:hex, :jsx, "2.4.0"},
   "meck": {:hex, :meck, "0.8.2"},
+  "microbrew": {:git, "git://github.com/sproutapp/microbrew.ex.git", "a0911db6696043760fe293a4dbf0b05463e9d8b4", []},
   "pavlov": {:hex, :pavlov, "0.1.0"},
   "rabbit_common": {:hex, :rabbit_common, "3.4.0"}}

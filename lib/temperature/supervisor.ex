@@ -7,7 +7,12 @@ defmodule Temperature.Supervisor do
 
   def init(:ok) do
     children = [
-      worker(Temperature.Consumer, [queue: "sprout.sensors.readings"]),
+      worker(Temperature.Consumer, [
+        [
+          exchange: "sprout.sensors.readings",
+          queue: "sprout.sensors.temperature"
+        ]
+      ]),
     ]
 
     supervise(children, strategy: :one_for_one)

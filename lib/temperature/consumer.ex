@@ -1,81 +1,51 @@
 defmodule Temperature.Consumer do
   use GenServer
-  use AMQP
-  import JSX
-  import Temperature.Parser
-  alias Temperature.Parser, as: Parser
+  import Microbrew.Agent
 
-  defmodule Payload do
-    defstruct event: nil, data: nil
+  def start_link(_ \\ [], opts) do
+    GenServer.start_link(__MODULE__, opts, [])
   end
 
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, [], [])
+  def init(options) do
+    a = agent(options)
+    start_consuming(a)
+
+    {:ok, a}
   end
 
-  @exchange    "sprout.sensors.readings"
-  @queue       "sensor::received"
-  @queue_error "#{@queue}_error"
-
-  def init(_opts) do
-    {:ok, conn} = Connection.open("amqp://guest:guest@localhost")
-    {:ok, chan} = Channel.open(conn)
-    # Limit unacknowledged messages to 10
-    Basic.qos(chan, prefetch_count: 10)
-    Queue.declare(chan, @queue_error, durable: true)
-    # Messages that cannot be delivered to any consumer in the main queue will be routed to the error queue
-    Queue.declare(chan, @queue, durable: true, arguments: [
-      {"x-dead-letter-exchange", :longstr, ""},
-      {"x-dead-letter-routing-key", :longstr, @queue_error}
-    ])
-    Exchange.topic(chan, @exchange, durable: true)
-    Queue.bind(chan, @queue, @exchange)
-    # Register the GenServer process as a consumer
-    Basic.consume(chan, @queue)
-    {:ok, chan}
+  defp agent(options) do
+    Microbrew.Agent.new(
+      exchange: options[:exchange],
+      queue: options[:queue],
+      queue_error: "#{options[:queue]}_error"
+    )
   end
 
-  def handle_info({payload, %{delivery_tag: tag, redelivered: redelivered}}, chan) do
-    spawn fn -> consume(chan, tag, redelivered, payload) end
-    {:noreply, chan}
+  defp start_consuming(agent) do
+    agent
+      |> signal("sensor::received")
+      |> on(:data, fn (payload, meta) ->
+        temperature = consume(payload, meta)
+        if (temperature) do
+          publish(agent, temperature)
+        end
+      end)
   end
 
-  defp publish(data) do
-    {:ok, conn} = Connection.open("amqp://guest:guest@localhost")
-    {:ok, channel} = Channel.open(conn)
+  defp consume(payload, _) do
+    reading = payload["reading"]
+    [type] = Regex.run ~r/temperature/, reading
 
-    payload = %Payload{
-      event: "temperature::new",
-      data: data
-    }
-    {_, payload} = JSX.encode(payload)
-
-    IO.puts "publishing #{payload}"
-
-    Basic.publish channel, @exchange, "", payload
-
-    Connection.close(conn)
-  end
-
-  defp consume(channel, tag, redelivered, payload) do
-    {_, payload} = JSX.decode(payload)
-
-    try do
-      case payload["event"] do
-        "sensor::received" ->
-          reading = payload["data"]["reading"]
-          [type] = Regex.run ~r/temperature/, reading
-
-          if type == "temperature" do
-            temperature = Parser.parse(reading)
-            publish(temperature)
-            Basic.ack channel, tag
-          end
-      end
-    rescue
-      exception ->
-        Basic.reject channel, tag, requeue: not redelivered
-        IO.puts "Error parsing #{payload}, #{exception}"
+    if type == "temperature" do
+      Temperature.Parser.parse(reading)
+    else
+      nil
     end
+  end
+
+  defp publish(agent, temperature) do
+    agent
+      |> signal("temperature::new")
+      |> emit(%{ :temperature => temperature })
   end
 end

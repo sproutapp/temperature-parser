@@ -12,7 +12,7 @@ defmodule Temperature.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: [:amqp],
+    [applications: [:microbrew],
      mod: {Temperature, []}
     ]
   end
@@ -28,9 +28,9 @@ defmodule Temperature.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [
-      {:pavlov, only: :test},
-      {:amqp, "0.0.6"},
-      {:exjsx, "~> 3.1.0"}
+      { :pavlov, only: :test },
+      { :microbrew, git: "git://github.com/sproutapp/microbrew.ex.git" },
+      { :exrm, "~> 0.14.16" }
     ]
   end
 end
