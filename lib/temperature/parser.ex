@@ -27,9 +27,12 @@ defmodule Temperature.Parser do
   end
 
   defp value(string) do
-    [_, temp] = String.split(string, "::")
-    {val, _} = Float.parse(temp)
-
-    val
+    try do
+      [_, temp] = String.split string, "::"
+      {val, _} = Float.parse temp
+      val
+    rescue
+      _ -> raise ArgumentError, message: "Invalid value #{string}"
+    end
   end
 end

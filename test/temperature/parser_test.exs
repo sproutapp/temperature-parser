@@ -1,15 +1,12 @@
 defmodule TemperatureParserTest do
   use Pavlov.Case
   import Pavlov.Syntax.Expect
+  import Temperature.Parser
 
   describe "Temperature Parser" do
     describe ".parse" do
-      let :sample do
-        "temperature::25"
-      end
-
       let :parsed do
-        Temperature.Parser.parse(sample)
+        parse("temperature::25")
       end
 
       it "parses to Celsius" do
@@ -27,18 +24,13 @@ defmodule TemperatureParserTest do
           |> to_eq 298.15
       end
 
-      context "Complex inputs" do
-        let :sample do
-          "temperature::25asdasd::123"
-        end
+      context "When given a malformed input" do
+        it "raises an ArgumentError" do
+          expect fn -> parse("panic!!") end
+            |> to_have_raised ArgumentError
 
-        let :parsed do
-          Temperature.Parser.parse(sample)
-        end
-
-        it "parses weird inputs" do
-          expect(parsed.celsius)
-            |> to_eq 25
+          expect fn -> parse("temperature::25asdasd::123") end
+            |> to_have_raised ArgumentError
         end
       end
     end
