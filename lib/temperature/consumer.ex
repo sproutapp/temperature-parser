@@ -17,7 +17,12 @@ defmodule Temperature.Consumer do
     Microbrew.Agent.new(
       exchange: options[:exchange],
       queue: options[:queue],
-      queue_error: "#{options[:queue]}_error"
+      queue_error: "#{options[:queue]}_error",
+      options: [
+        exchange: [
+          type: :fanout
+        ]
+      ]
     )
   end
 
