@@ -24,26 +24,29 @@ defmodule Temperature.Consumer do
   defp start_consuming(agent) do
     agent
       |> signal("sensor::received")
-      |> on(:data, fn (payload, meta) ->
-        temperature = consume(payload, meta)
-        if (temperature) do
-          publish(agent, temperature)
-        end
-      end)
+      |> stream
+      |> consume agent
   end
 
-  defp consume(payload, _) do
-    reading = payload["reading"]
-    [type] = Regex.run ~r/temperature/, reading
+  defp consume(stream, agent) do
+     for value <- stream |> Stream.map(&parse/1) |> Stream.reject(&is_nil/1) do
+       publish agent, value
+     end
+  end
 
-    if type == "temperature" do
-      Temperature.Parser.parse(reading)
-    else
-      nil
+  defp parse({payload, meta}) do
+    reading = payload["data"]["reading"]
+    type = Regex.run ~r/temperature/, reading
+
+    cond do
+      hd(type) == "temperature" -> {Temperature.Parser.parse(reading), meta}
+      true -> nil
     end
   end
 
-  defp publish(agent, temperature) do
+  defp publish(agent, {temperature, meta}) do
+    AMQP.Basic.ack agent.consumer.channel, meta[:delivery_tag]
+
     agent
       |> signal("temperature::new")
       |> emit(%{ :temperature => temperature })
