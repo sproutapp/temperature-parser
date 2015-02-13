@@ -36,7 +36,7 @@ defmodule TemperatureConsumerTest do
         )
 
         allow(Microbrew.Consumer, [:no_link, :passthrough])
-          |> to_receive(new: fn _, queue, _ -> {:ok, %Microbrew.Consumer{channel: %AMQP.Channel{}, queue: queue}} end)
+          |> to_receive(new: fn _, queue, _, _ -> {:ok, %Microbrew.Consumer{channel: %AMQP.Channel{}, queue: queue}} end)
 
         allow(Microbrew.Agent, [:no_link, :passthrough])
           |> to_receive(stream: fn _ -> stream end)
