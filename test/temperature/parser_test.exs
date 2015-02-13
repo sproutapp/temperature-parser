@@ -6,6 +6,7 @@ defmodule TemperatureParserTest do
   describe "Temperature Parser" do
     describe ".parse" do
       let :parsed do
+        import Temperature.Parser
         parse("temperature::25")
       end
 
