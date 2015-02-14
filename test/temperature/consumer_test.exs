@@ -4,7 +4,7 @@ defmodule TemperatureConsumerTest do
   import Temperature.Consumer
 
   describe "Temperature Consumer" do
-    describe ".start_link" do
+    describe ".start_consuming" do
       let :payload do
         %{
           "event" => "sensor::received",
@@ -49,7 +49,7 @@ defmodule TemperatureConsumerTest do
       end
 
       it "publishes temperatures consumed from an exchange & queue" do
-        Temperature.Consumer.start_link [], %{ :exchange => "exchange", :queue => "queue" }
+        Temperature.Consumer.start_consuming %{ :exchange => "exchange", :queue => "queue" }
 
         expect(Microbrew.Agent)
           |> to_have_received :emit
@@ -57,7 +57,7 @@ defmodule TemperatureConsumerTest do
       end
 
       it "acknowledges correctly parsed messages" do
-        Temperature.Consumer.start_link [], %{ :exchange => "exchange", :queue => "queue" }
+        Temperature.Consumer.start_consuming %{ :exchange => "exchange", :queue => "queue" }
 
         expect(AMQP.Basic)
           |> to_have_received :ack

@@ -10,11 +10,16 @@ defmodule Temperature.Supervisor do
       worker(Temperature.Consumer, [
         [
           exchange: "sprout.sensors.readings",
-          queue: "sprout.sensors.temperature"
+          queue: "sprout.sensors.temperature",
+          options: [
+            exchange: [
+              type: :fanout
+            ]
+          ]
         ]
-      ]),
+      ], restart: :permanent)
     ]
 
-    supervise(children, strategy: :one_for_one)
+    supervise(children, strategy: :one_for_one, max_seconds: 1)
   end
 end

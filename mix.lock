@@ -8,7 +8,7 @@
   "json": {:hex, :json, "0.3.2"},
   "jsx": {:hex, :jsx, "2.4.0"},
   "meck": {:hex, :meck, "0.8.2"},
-  "microbrew": {:git, "git://github.com/sproutapp/microbrew.ex.git", "e7046fa1e4452a8a3a45323bdce6b3c60b06b448", []},
+  "microbrew": {:git, "git://github.com/sproutapp/microbrew.ex.git", "6d73ec3dc97a4db55bd5bf215d842df2ba7b170d", []},
   "pavlov": {:hex, :pavlov, "0.2.2"},
   "rabbit_common": {:hex, :rabbit_common, "3.4.0"},
   "uuid": {:hex, :uuid, "0.1.5"}}

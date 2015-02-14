@@ -1,16 +1,16 @@
 defmodule Temperature.Consumer do
-  use GenServer
   import Microbrew.Agent
 
-  def start_link(_ \\ [], opts) do
-    GenServer.start_link(__MODULE__, opts, [])
+  def start_link(_ \\ [], options) do
+    pid = spawn_link fn -> start_consuming(options) end
+    {:ok, pid}
   end
 
-  def init(options) do
-    a = agent(options)
-    start_consuming(a)
-
-    {:ok, a}
+  def start_consuming(options) do
+    agent(options)
+      |> signal("sensor::received")
+      |> stream
+      |> consume agent(options)
   end
 
   defp agent(options) do
@@ -18,25 +18,17 @@ defmodule Temperature.Consumer do
       exchange: options[:exchange],
       queue: options[:queue],
       queue_error: "#{options[:queue]}_error",
-      options: [
-        exchange: [
-          type: :fanout
-        ]
-      ]
+      options: options[:options]
     )
   end
 
-  defp start_consuming(agent) do
-    agent
-      |> signal("sensor::received")
-      |> stream
-      |> consume agent
-  end
-
   defp consume(stream, agent) do
-     for value <- stream |> Stream.map(&parse/1) |> Stream.reject(&is_nil/1) do
-       publish agent, value
-     end
+    for value <- stream |> Stream.map(&parse/1) |> Stream.reject(&is_nil/1) do
+      publish agent, value
+    end
+
+    :timer.sleep(1000)
+    :shutdown
   end
 
   defp parse({payload, meta}) do
